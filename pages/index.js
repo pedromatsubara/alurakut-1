@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import MainGrid from "../src/components/MainGrid";
 import Box from "../src/components/Box";
 import {
@@ -7,6 +7,7 @@ import {
 	OrkutNostalgicIconSet,
 } from "../src/lib/AlurakutCommons";
 import { ProfileRelationsBoxWrapper } from "../src/components/ProfileRelations";
+import comunidadesEstaticas from "../src/lib/data/comunidadesEstaticas";
 
 function ProfileSidebar(propriedades) {
 	return (
@@ -34,22 +35,34 @@ function ProfileSidebar(propriedades) {
 
 export default function Home() {
 	const usuarioAleatorio = "pedromatsubara";
-	const [comunidades, setComunidades] = React.useState([
-		{
-			id: "123",
-			title: "Eu odeio acordar cedo",
-			image: "https://alurakut.vercel.app/capa-comunidade-01.jpg",
-		},
-	]);
 
-	const pessoasFavoritas = [
+	const [maxAlurakuteiros, setMaxAlurakuteiros] = useState(6);
+	const [comunidades, setComunidades] = useState(comunidadesEstaticas);
+
+	const [alurakuteiros, setAlurakuteiros] = useState([
 		"juunegreiros",
 		"omariosouto",
 		"peas",
 		"rafaballerini",
 		"marcobrunodev",
 		"felipefialho",
-	];
+	]);
+
+	useEffect(() => {
+		fetch(
+			"https://raw.githubusercontent.com/alura-challenges/alurakut/main/README.md"
+		)
+			.then((data) => data.text())
+			.then((data) => {
+				const extractedNames = data
+					.split(
+						"/cf9f1db04b6e4e2b7a984902d69b889f717d09cb94b8b4296ffffc16d0c73120/"
+					)
+					.map((text) => text.split("/")[0]);
+				extractedNames.shift();
+				setAlurakuteiros(extractedNames);
+			});
+	});
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
@@ -59,15 +72,14 @@ export default function Home() {
 			title: dadosDoForm.get("title"),
 			// image: dadosDoForm.get("image"),
 			image: "https://alurakut.vercel.app/capa-comunidade-01.jpg",
-
 		};
 		const comunidadesAtualizadas = [...comunidades, comunidade];
 		setComunidades(comunidadesAtualizadas);
-	}
+	};
 
 	return (
 		<>
-			<AlurakutMenu />
+			<AlurakutMenu githubUser={usuarioAleatorio} />
 			<MainGrid>
 				{/* <Box style="grid-area: profileArea;"> */}
 				<div className="profileArea" style={{ gridArea: "profileArea" }}>
@@ -110,10 +122,10 @@ export default function Home() {
 					<ProfileRelationsBoxWrapper>
 						<h2 className="smallTitle">Comunidades ({comunidades.length})</h2>
 						<ul>
-							{comunidades.slice(0,6).map((itemAtual) => {
+							{comunidades.slice(0, 6).map((itemAtual) => {
 								return (
 									<li key={itemAtual.id}>
-										<a href={`/users/${itemAtual.title}`}>
+										<a href={`/users/${itemAtual.title}`} target="_blank">
 											<img src={itemAtual.image} />
 											<span>{itemAtual.title}</span>
 										</a>
@@ -124,20 +136,21 @@ export default function Home() {
 					</ProfileRelationsBoxWrapper>
 					<ProfileRelationsBoxWrapper>
 						<h2 className="smallTitle">
-							Pessoas da comunidade ({pessoasFavoritas.length})
+							Pessoas da comunidade ({alurakuteiros.length})
 						</h2>
 
 						<ul>
-							{pessoasFavoritas.slice(0,6).map((itemAtual) => {
+							{alurakuteiros.slice(0, maxAlurakuteiros).map((itemAtual) => {
 								return (
 									<li key={itemAtual}>
-										<a href={`/users/${itemAtual}`}>
+										<a href={`https://github.com/${itemAtual}`} target="_blank">
 											<img src={`https://github.com/${itemAtual}.png`} />
 											<span>{itemAtual}</span>
 										</a>
 									</li>
 								);
 							})}
+							<button onClick={() => setMaxAlurakuteiros(maxAlurakuteiros+9)}>Ver mais...</button>
 						</ul>
 					</ProfileRelationsBoxWrapper>
 				</div>
