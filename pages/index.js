@@ -36,9 +36,10 @@ function ProfileSidebar(propriedades) {
 export default function Home() {
 	const usuarioAleatorio = "pedromatsubara";
 
-	const [maxAlurakuteiros, setMaxAlurakuteiros] = useState(6);
 	const [comunidades, setComunidades] = useState(comunidadesEstaticas);
 
+	const [filteredAlurakuteiros, setFilteredAlurakuteiros] = useState([]);
+	const [maxAlurakuteiros, setMaxAlurakuteiros] = useState(6);
 	const [alurakuteiros, setAlurakuteiros] = useState([
 		"juunegreiros",
 		"omariosouto",
@@ -61,8 +62,9 @@ export default function Home() {
 					.map((text) => text.split("/")[0]);
 				extractedNames.shift();
 				setAlurakuteiros(extractedNames);
+				setFilteredAlurakuteiros(extractedNames);
 			});
-	});
+	}, []);
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
@@ -75,6 +77,16 @@ export default function Home() {
 		};
 		const comunidadesAtualizadas = [...comunidades, comunidade];
 		setComunidades(comunidadesAtualizadas);
+	};
+
+	const handleAlurakuteirosFilter = (e) => {
+		if (e.target.value === "") {
+			setFilteredAlurakuteiros(alurakuteiros);
+		} else {
+			setFilteredAlurakuteiros(alurakuteiros.filter(alurakuteiro => alurakuteiro.toLocaleLowerCase().indexOf(e.target.value.toLocaleLowerCase()) !== -1));
+		}
+		
+		setMaxAlurakuteiros(6);
 	};
 
 	return (
@@ -135,23 +147,37 @@ export default function Home() {
 						</ul>
 					</ProfileRelationsBoxWrapper>
 					<ProfileRelationsBoxWrapper>
-						<h2 className="smallTitle">
-							Pessoas da comunidade ({alurakuteiros.length})
-						</h2>
+						<h2 className="smallTitle">Pessoas da comunidade ({filteredAlurakuteiros.length})</h2>
 
+						<div>
+							<input
+								onChange={(e) => handleAlurakuteirosFilter(e)}
+								placeholder="Quem você procura?"
+								name="filter"
+								aria-label="Quem você procura?"
+								type="text"
+							/>
+						</div>
 						<ul>
-							{alurakuteiros.slice(0, maxAlurakuteiros).map((itemAtual) => {
-								return (
-									<li key={itemAtual}>
-										<a href={`https://github.com/${itemAtual}`} target="_blank">
-											<img src={`https://github.com/${itemAtual}.png`} />
-											<span>{itemAtual}</span>
-										</a>
-									</li>
-								);
-							})}
-							<button onClick={() => setMaxAlurakuteiros(maxAlurakuteiros+9)}>Ver mais...</button>
+							{filteredAlurakuteiros
+								.slice(0, maxAlurakuteiros)
+								.map((itemAtual) => {
+									return (
+										<li key={Math.random() + itemAtual}>
+											<a
+												href={`https://github.com/${itemAtual}`}
+												target="_blank"
+											>
+												<img src={`https://github.com/${itemAtual}.png`} />
+												<span>{itemAtual}</span>
+											</a>
+										</li>
+									);
+								})}
 						</ul>
+						<button onClick={() => setMaxAlurakuteiros(maxAlurakuteiros + 9)}>
+							Ver mais...
+						</button>
 					</ProfileRelationsBoxWrapper>
 				</div>
 			</MainGrid>
