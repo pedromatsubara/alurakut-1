@@ -72,7 +72,7 @@ export default function Home() {
 		const comunidade = {
 			id: new Date().toISOString(),
 			title: dadosDoForm.get("title"),
-			// image: dadosDoForm.get("image"),
+			href: dadosDoForm.get("image"),
 			image: "https://alurakut.vercel.app/capa-comunidade-01.jpg",
 		};
 		const comunidadesAtualizadas = [...comunidades, comunidade];
@@ -137,7 +137,7 @@ export default function Home() {
 							{comunidades.slice(0, 6).map((itemAtual) => {
 								return (
 									<li key={itemAtual.id}>
-										<a href={`/users/${itemAtual.title}`} target="_blank">
+										<a href={itemAtual.href}>
 											<img src={itemAtual.image} />
 											<span>{itemAtual.title}</span>
 										</a>
