@@ -7,7 +7,6 @@ import {
 	OrkutNostalgicIconSet,
 } from "../src/lib/AlurakutCommons";
 import { ProfileRelationsBoxWrapper } from "../src/components/ProfileRelations";
-import comunidadesEstaticas from "../src/lib/data/comunidadesEstaticas";
 
 function ProfileSidebar(propriedades) {
 	return (
@@ -36,7 +35,8 @@ function ProfileSidebar(propriedades) {
 export default function Home() {
 	const usuarioAleatorio = "pedromatsubara";
 
-	const [comunidades, setComunidades] = useState(comunidadesEstaticas);
+	const [comunidades, setComunidades] = useState([]);
+	const [maxComunidades, setMaxComunidades] = useState(6);
 
 	const [filteredAlurakuteiros, setFilteredAlurakuteiros] = useState([]);
 	const [maxAlurakuteiros, setMaxAlurakuteiros] = useState(6);
@@ -64,28 +64,66 @@ export default function Home() {
 				setAlurakuteiros(extractedNames);
 				setFilteredAlurakuteiros(extractedNames);
 			});
+
+		fetch("https://graphql.datocms.com/", {
+			method: "POST",
+			headers: {
+				Authorization: "a561001e679224adba2e060dc256e3",
+				"Content-type": "application/json",
+				Accept: "application/json",
+			},
+			body: JSON.stringify({
+				query: `query {
+					allCommunities {
+						id
+						title
+						href
+						imageUrl
+					}
+				}`,
+			}),
+		}).then(async (res) => {
+			const { data } = await res.json();
+			setComunidades(data.allCommunities.sort((a, b) => a.id - b.id));
+		});
 	}, []);
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
 		const dadosDoForm = new FormData(e.target);
-		const comunidade = {
-			id: new Date().toISOString(),
+
+		const novaCommunidade = {
 			title: dadosDoForm.get("title"),
-			href: dadosDoForm.get("image"),
-			image: "https://alurakut.vercel.app/capa-comunidade-01.jpg",
+			href: dadosDoForm.get("href"),
+			imageUrl: dadosDoForm.get("imageUrl"),
 		};
-		const comunidadesAtualizadas = [...comunidades, comunidade];
-		setComunidades(comunidadesAtualizadas);
+
+		fetch("/api/comunidades", {
+			method: "POST",
+			headers: {
+				"Content-type": "application/json",
+			},
+			body: JSON.stringify(novaCommunidade),
+		}).then(async (res) => {
+			const data = await res.json();
+			setComunidades([...comunidades, data.comunidadeCriada]);
+		});
 	};
 
 	const handleAlurakuteirosFilter = (e) => {
 		if (e.target.value === "") {
 			setFilteredAlurakuteiros(alurakuteiros);
 		} else {
-			setFilteredAlurakuteiros(alurakuteiros.filter(alurakuteiro => alurakuteiro.toLocaleLowerCase().indexOf(e.target.value.toLocaleLowerCase()) !== -1));
+			setFilteredAlurakuteiros(
+				alurakuteiros.filter(
+					(alurakuteiro) =>
+						alurakuteiro
+							.toLocaleLowerCase()
+							.indexOf(e.target.value.toLocaleLowerCase()) !== -1
+				)
+			);
 		}
-		
+
 		setMaxAlurakuteiros(6);
 	};
 
@@ -118,8 +156,15 @@ export default function Home() {
 							<div>
 								<input
 									placeholder="Coloque uma URL para usarmos de capa"
-									name="image"
+									name="imageUrl"
 									aria-label="Coloque uma URL para usarmos de capa"
+								/>
+							</div>
+							<div>
+								<input
+									placeholder="Coloque a URL de destino"
+									name="href"
+									aria-label="Coloque a URL de destino"
 								/>
 							</div>
 
@@ -134,20 +179,25 @@ export default function Home() {
 					<ProfileRelationsBoxWrapper>
 						<h2 className="smallTitle">Comunidades ({comunidades.length})</h2>
 						<ul>
-							{comunidades.slice(0, 6).map((itemAtual) => {
+							{comunidades.slice(0, maxComunidades).map((itemAtual) => {
 								return (
 									<li key={itemAtual.id}>
 										<a href={itemAtual.href}>
-											<img src={itemAtual.image} />
+											<img src={itemAtual.imageUrl} />
 											<span>{itemAtual.title}</span>
 										</a>
 									</li>
 								);
 							})}
 						</ul>
+						<button onClick={() => setMaxComunidades(maxComunidades + 6)}>
+							Ver mais...
+						</button>
 					</ProfileRelationsBoxWrapper>
 					<ProfileRelationsBoxWrapper>
-						<h2 className="smallTitle">Pessoas da comunidade ({filteredAlurakuteiros.length})</h2>
+						<h2 className="smallTitle">
+							Pessoas da comunidade ({filteredAlurakuteiros.length})
+						</h2>
 
 						<div>
 							<input
